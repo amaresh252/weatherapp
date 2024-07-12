@@ -25,10 +25,11 @@ export const Home = () => {
     const key='f9621643de9e4580857140358241107';
     const [weatherInfo,setWeatherInfo]=useState(null);
     const [forecastInfo,setForecastInfo]=useState(null);
+    const [errorone,setErrorOne]=useState(null)
     const weatherdata= {
       labels: forecastInfo&&forecastInfo.map((day) => day.date),
       datasets: [{
-        label: 'temprature',
+        label: 'temprature in °C',
         data: forecastInfo&&forecastInfo.map((day) => day.day.avgtemp_c),
         backgroundColor:['red','blue','green','orange','pink','brown','yellow']
       }]
@@ -37,22 +38,32 @@ export const Home = () => {
     const [city,setCity]=useState('');
     
       const handleSearch=async()=>{
-        const response=await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`)
-        const data=await response.json();
-        const forecastResp=await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${key}&q=${city}&days=7`)
-        const forecast=await forecastResp.json();
-        setWeatherInfo(data)
-        console.log(forecast.forecast.forecastday)
-        setForecastInfo(forecast.forecast.forecastday)
-        console.log(data)
+        try{
+          const response=await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`)
+          const data=await response.json();
+          const forecastResp=await fetch(`http://api.weatherapi.com/v1/forecast.json?key=${key}&q=${city}&days=7`)
+          const forecast=await forecastResp.json();
+          if(response.status==200 && forecastResp.status==200){
+            setWeatherInfo(data)
+            setForecastInfo(forecast.forecast.forecastday)
+          }
+          else{
+            setErrorOne('Invalid City Name')
+          }
+         
+         
+        }catch(err){
+          setErrorOne('Failed To Fetch')
+        }
+
+       
       }
    
   return (
     <div>
       <Container>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
-                
-                <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                     <TextField
                         label="City"
                         value={city}  
@@ -63,7 +74,13 @@ export const Home = () => {
                     <Button variant="contained" sx={{ backgroundColor: '#ff9800' }} onClick={(e)=>handleSearch()}>
                         Search
                     </Button>
-                </Box>
+      </Box>
+      </Box>
+      </Container>
+     {errorone?<Container>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}><Typography variant="h4" gutterBottom sx={{ color: '#3f51b5' }}>{errorone}</Typography></Box>
+      </Container> :<Container>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
                 <Typography variant="h4" gutterBottom sx={{ color: '#3f51b5' }}>
                     Current Weather
                 </Typography>
@@ -87,7 +104,7 @@ export const Home = () => {
                     </CardContent>
                 </Card>}
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 5 ,mb:2}}>
                 <Typography variant="h4" gutterBottom sx={{ color: '#4caf50' }}>
                     7-Day Weather Forecast
                 </Typography>
@@ -97,15 +114,13 @@ export const Home = () => {
                     ))}
                 </Grid>
             </Box>
-            <Typography variant="h4" gutterBottom sx={{ color: 'rgb(255 235 12)' ,mt:4 }}>
-                    7-Day Forecast Chart
+            <Typography variant="h4" gutterBottom sx={{ color: 'rgb(255 235 12)' ,mt:6 }}>
+                   Next 7-Days Temprature Chart
                 </Typography>
             <Box sx={{width:700}}>
         <BarChart weatherdata={weatherdata} />
         </Box>
-        </Container>
-        
-        
+        </Container>  }
     </div>
   )
 }
